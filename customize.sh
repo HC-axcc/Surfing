@@ -9,6 +9,8 @@ NET_PATH="/data/misc/net"
 CTR_PATH="/data/misc/net/rt_tables"
 CONFIG_FILE="/data/adb/box_bll/clash/config.yaml"
 BACKUP_FILE="/data/adb/box_bll/clash/subscribe_urls_backup.txt"
+APK_FILE="$MODPATH/webroot/Web.apk"
+INSTALL_DIR="/data/app"
 
 if [ "$BOOTMODE" != true ]; then
   abort "Error: 请在 Magisk Manager / KernelSU Manager / APatch 中安装"
@@ -59,6 +61,18 @@ restore_subscribe_urls() {
   fi
 }
 
+installapk() {
+  if [ -f "$APK_FILE" ]; then
+    cp "$APK_FILE" "$INSTALL_DIR/"
+    ui_print "- 开始安装 Web.apk..."
+    pm install "$INSTALL_DIR/Web.apk"
+    ui_print "- Web.apk 安装完成"
+    rm -rf "$INSTALL_DIR/Web.apk"
+  else
+    ui_print "- 未找到 APK 文件 Web.apk"
+  fi
+}
+
 unzip -qo "${ZIPFILE}" -x 'META-INF/*' -d "$MODPATH"
 if [ -d /data/adb/box_bll ]; then
   ui_print "- 更新中..."
@@ -66,6 +80,7 @@ if [ -d /data/adb/box_bll ]; then
   ui_print "- 正在初始化服务..."
   /data/adb/box_bll/scripts/box.service stop > /dev/null 2>&1
   sleep 1.5
+  installapk
   
   if [ -d /data/adb/box_bll/mihomo ]; then
     mv /data/adb/box_bll/mihomo /data/adb/box_bll/clash
@@ -94,10 +109,11 @@ if [ -d /data/adb/box_bll ]; then
   /data/adb/box_bll/scripts/box.service start > /dev/null 2>&1
   ui_print "- 更新完成无需重启设备..."
 else
-  mv "$MODPATH/box_bll" /data/adb/
   ui_print "- 安装中..."
   ui_print "- ————————————————"
-  ui_print "- 安装完成 工作目录"
+  mv "$MODPATH/box_bll" /data/adb/
+  installapk
+  ui_print "- 模块安装完成 工作目录"
   ui_print "- data/adb/box_bll/"
   ui_print "- 安装无需重启设备..."
   ui_print "- 首次安装需通过模块开关重启模块服务"
